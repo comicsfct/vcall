@@ -1,0 +1,14 @@
+name: vcall
+channels:
+  - bioconda
+  - conda-forge
+dependencies:
+  - snakemake=5.4.3
+  - picard=2.18.27
+  - bwa=0.7.17
+  - bcftools=1.9
+  - htslib=1.9
+  - samtools=1.9
+  - samblaster=0.1.24
+  - sambamba=0.6.8
+  - gatk=3.8
