@@ -1,19 +1,29 @@
 # Vcall
 A variantcalling pipeline.
 :warning: still in development :construction:
+
 ### How to run it
-1. Have [Docker](https://www.docker.com/get-started) installed
+
+1. Have [Docker](https://www.docker.com/get-started) installed (absolutely necessary if you wat to rebuild the docker).
+1b. Use [udocker](https://github.com/indigo-dc/udocker) instead - this is what is available in our servers, do this is what will be mentioned in the examples.
+
 2. Open Command Prompt
+
 3. In Command Prompt type: 
+
 ```
-docker pull jpmatos/vcall:0.2.2 (or other tag)
+udocker pull jpmatos/vcall:0.2.2 (or other tag)
+udocker create vcall jpmatos/vcall:0.2.2
 ```
+
 4. Config the config_docker.yaml by changing 'Dir_settings:', 'Settings:' and 'Threads':
+
 5. In Command Prompt type:
 ```
-docker run -v </your_directory/>:/mnt/share jpmatos/vcall:0.2.2 snakemake --snakefile /mnt/share/vcall-pipe.snake -p /mnt/share/repo/example_dataset/output/<analisis_to_make> --cores <n_of_avaliable_cores>
+udocker run -v </your_directory/>:/mnt/share vcall snakemake --snakefile /mnt/share/vcall-pipe.snake -p /mnt/share/repo/example_dataset/output/<analisis_to_make> --cores <n_of_avaliable_cores>
 ```
-| Analisis_to_make:
+
+| Analysis_to_make:
 
 > For comparation between Tumor and Normal reads:
 ```
@@ -32,21 +42,14 @@ docker run -v </your_directory/>:/mnt/share jpmatos/vcall:0.2.2 snakemake --snak
 Output dir example:
 /mnt/share/repo/example_dataset/output/T.vcf
 ```
-#### Some suggestions:
-* If your docker is slow, try this:
-> Open docker container: 
+
+Caution: you cannot use the same container several times simultaneously. 
+If you're going to run several times the same image, you need to run each in their own separate container:
 ```
-docker run -v </your_directory/docker_folder>:/mnt/share/ jpmatos/vcall:0.2.2
-```
-> Then type: 
- ```
-snakemake --snakefile /mnt/share/vcall-pipe.snake -p /mnt/share/repo/example_dataset/output/<your_read>.Normal_VS_Tumor_output.vcf --cores <n_of_avaliable_cores>
+udocker run -v </your_directory/>:/mnt/share jpmatos/vcall:0.2.2 snakemake --snakefile /mnt/share/vcall-pipe.snake -p /mnt/share/repo/example_dataset/output/<analisis_to_make> --cores <n_of_avaliable_cores>
 ```
 
-
-> This time the container will not close after the pipeline run.
-
-
+But remember to delete the containers when you finish, otherwise udocker will start occupying a lot of disk space.
 
 
 :warning: still in development :construction:
