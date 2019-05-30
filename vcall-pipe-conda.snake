@@ -201,7 +201,7 @@ rule Call_Variants:
 		-ip 100 \
 		-I {input.recal} \
 		-stand_call_conf 10  --filter_bases_not_stored --emitRefConfidence GVCF \
-		-dbsnp {input.ksites1} -variant_index_type LINEAR -variant_index_parameter 128000 \
+		--dbsnp {input.ksites1} -variant_index_type LINEAR -variant_index_parameter 128000 \
 		-nct {threads} \
 		-o {output.site} ' + L_TARGET + ' > {output.logs}' 
 		# in case of exões (WES vs WGS) 
