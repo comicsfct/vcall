@@ -18,11 +18,6 @@ output_dir = config["output_dir"]
 logs_dir = config["logs_dir"]
 jar_dir = config["jar_dir"]
 
-#Annotation
-
-jar_snpEff = config["jar_snpEff"]
-jar_SnpSift = config["jar_SnpSift"]
-
 GENOME = config["GENOME"]
 KS1 = config["KS1"]
 KS2 = config["KS2"]
