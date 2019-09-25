@@ -1,15 +1,16 @@
 # Vcall
 A variantcalling pipeline.
-:warning: still in development :construction:
+:construction: still in development :construction:
 
 ### How to run it
 
-1. Have [Docker](https://www.docker.com/get-started) installed (absolutely necessary if you wat to rebuild the docker).
-1b. Use [udocker](https://github.com/indigo-dc/udocker) instead - this is what is available in our servers, do this is what will be mentioned in the examples.
+1a. Use [Docker](https://www.docker.com/get-started). This is specially necessary if you want to rebuild the docker image.
 
-2. Open Command Prompt
+1b. Use [udocker](https://github.com/indigo-dc/udocker). This is what we're using in our servers, so this is what will be mentioned in the examples. This docker basically contains a conda environment with all the necessary packages installed.
 
-3. In Command Prompt type: 
+1c. Use [conda](https://docs.conda.io/en/latest/) directly. Create and activate a conda environment with the configuration file in vcall_conda.yml.
+
+3. Pull the docker image 
 
 ```
 udocker pull jpmatos/vcall:0.2.2 (or other tag)
@@ -48,8 +49,6 @@ If you're going to run several times the same image, you need to run each in the
 ```
 udocker run -v </your_directory/>:/mnt/share jpmatos/vcall:0.2.2 snakemake --snakefile /mnt/share/vcall-pipe.snake -p /mnt/share/repo/example_dataset/output/<analisis_to_make> --cores <n_of_avaliable_cores>
 ```
-
-But remember to delete the containers when you finish, otherwise udocker will start occupying a lot of disk space.
 
 
 :warning: still in development :construction:
