@@ -1,6 +1,8 @@
-# Vcall
-A variantcalling pipeline.
 :construction: still in development :construction:
+
+# Vcall
+
+A variantcalling pipeline based on GATK 3.8.
 
 ### How to run it
 
@@ -22,7 +24,7 @@ conda env create -f vcall_conda.yml
 conda activate vcall
 ```
 
-4. Config the config_docker.yaml by changing 'Dir_settings:', 'Settings:' and 'Threads':
+3. Adjust the configuration file config.yaml by changing the appropriate variables:
 
 5. In Command Prompt type:
 ```
