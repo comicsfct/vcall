@@ -4,17 +4,22 @@ A variantcalling pipeline.
 
 ### How to run it
 
-1a. Use [Docker](https://www.docker.com/get-started). This is specially necessary if you want to rebuild the docker image.
+1a. Use [Docker](https://www.docker.com/get-started). This is specially necessary if you want to rebuild the docker image, which basically contains a conda environment with all the necessary packages installed.
 
-1b. Use [udocker](https://github.com/indigo-dc/udocker). This is what we're using in our servers, so this is what will be mentioned in the examples. This docker basically contains a conda environment with all the necessary packages installed.
+1b. Use [udocker](https://github.com/indigo-dc/udocker). This is what we're using in our servers, so this is what will be mentioned in the examples.
 
 1c. Use [conda](https://docs.conda.io/en/latest/) directly. Create and activate a conda environment with the configuration file in vcall_conda.yml.
 
-3. Pull the docker image 
-
+2a/b. Pull the docker image.
 ```
-udocker pull jpmatos/vcall:0.2.2 (or other tag)
-udocker create vcall jpmatos/vcall:0.2.2
+udocker pull jpmatos/vcall:0.2.2
+udocker create --name=vcall jpmatos/vcall:0.2.2
+```
+
+2c. Create the conda environment.
+```
+conda env create -f vcall_conda.yml
+conda activate vcall
 ```
 
 4. Config the config_docker.yaml by changing 'Dir_settings:', 'Settings:' and 'Threads':
