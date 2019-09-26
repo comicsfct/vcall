@@ -48,7 +48,7 @@ rule BWA_samblaster_sambamba: #Align reads to reference (using BWA);
 		r_fow = main_dir + sample_dir + '{sample}.read1.fastq.gz',#R1
 		r_rev = main_dir + sample_dir + '{sample}.read2.fastq.gz' #R2
 	output:
-		align = main_dir + output_dir + '{sample}.alignment.bam'
+		align = main_dir + output_dir + '{sample}.alignment.bam',
 		log = main_dir + output_dir + '{sample}.alignment.log'
 	threads: bwa_samblaster_sambamba_threads
 	shell: 
