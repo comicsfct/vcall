@@ -1,7 +1,7 @@
 #----------------Settings:----------------------------------------------
 #The config file must be in the same place as were we're running
 #configfile:"/home/dsobral/vcall/config_conda.yaml"
-configfile:"config_conda_hg38.yaml"
+configfile:"config_vcall.yaml"
 
 #|_________Threading_sets:___________|
 
