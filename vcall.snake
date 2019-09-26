@@ -1,7 +1,12 @@
 #----------------Settings:----------------------------------------------
+#print('Insert configfile directory:("/mnt/share/config_docker.yaml")')
+#config_f = input()
+#print('Configfile: ',config_f)
+#configfile: config_f
+
 #The config file must be in the same place as were we're running
 #configfile:"/home/dsobral/vcall/config_conda.yaml"
-configfile:"config_vcall.yaml"
+configfile:"config_conda_hg38.yaml"
 
 #|_________Threading_sets:___________|
 
@@ -21,6 +26,10 @@ output_dir = config["output_dir"]
 logs_dir = config["logs_dir"]
 #jar_dir = config["jar_dir"]
 
+#Annotation
+
+#jar_snpEff = config["jar_snpEff"]
+#jar_SnpSift = config["jar_SnpSift"]
 
 GENOME = config["GENOME"]
 KS1 = config["KS1"]
@@ -88,6 +97,7 @@ rule samtools_index:
 
 rule gatk_BaseRecalibrator: #multitheading error
 	input:
+		#jar = jar_dir + 'gatk-3.8/GenomeAnalysisTK.jar',
 		ref = main_dir + genome_dir + GENOME + '.fasta',
 		fai = main_dir + genome_dir + GENOME + '.fasta.fai',
 		dict = main_dir + genome_dir + GENOME + '.dict',
@@ -246,3 +256,12 @@ rule Normal_VS_Tumor:
 #		java -Xmx16g -jar {input.jar_snpeff} eff -noMotif -noNextProt -q -canon -hgvs -lof GRCh37.75 - | \
 #		{input.pl_vcfEffOnePerLine} | \
 #		bgzip > {output}'
+
+'''
+dbNSFP = "~/hg19/dbNSFP2.9_variants.txt.gz",
+annot = "~/hg19/ExAC.r0.3.1.sites.vep.vcf.gz"
+'''
+'''
+java -Xmx16g -jar{input.jar_snpeff} dbnsfp -f ESP6500_EA_AF,1000Gp1_AF,phastCons100way_vertebrate_rankscore,SIFT_score,SIFT_pred,Polyphen2_HDIV_score,Polyphen2_HDIV_pred,Polyphen2_HVAR_score,Polyphen2_HVAR_pred,LRT_score,LRT_pred,MutationTaster_score,MutationTaster_pred,MutationAssessor_score,MutationAssessor_pred,FATHMM_score,FATHMM_pred,MetaSVM_score,MetaSVM_pred,MetaLR_score,MetaLR_pred,CADD_phred,clinvar_clnsig,clinvar_trait -db {input.dbNSFP} - | \
+java -Xmx16g -jar {jar_snpsift} annotate {input.annot} -info ExAC_AF_v0.3.1 -noID | \
+		'''
