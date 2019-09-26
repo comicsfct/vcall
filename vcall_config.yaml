@@ -1,22 +1,21 @@
 #----------------Dir_settings:----------------------------------------------
-base_dir: /mnt/data/CREMCOMICSdo001/dsobral/vcall/ #where it start in docker env
 main_dir: /mnt/data/CREMCOMICSdo001/dsobral/vcall/
-genome_dir: genome_b37/ # genome data
-sample_dir: sample_input/ #sample directory
-output_dir: output/ #output folder
-logs_dir: logs/ # for logs...
+genome_dir: /mnt/data/CREMCOMICSdo001/comics/genome/hg38/
+sample_dir: sample_input/ #sample director, where samples are (relative to main_dir)
+output_dir: output/ #output folder (relative to main_dir)
 
 #---------------Settings:----------------------------------------------
-GENOME: b37_human_g1k_v37_decoy.chr20
-KS1: b37_dbsnp_138.b37.chr_20p12.1.vcf.gz
-KS2: b37_Mills_and_1000G_gold_standard.indels.b37.chr_20p12.1.vcf.gz
-KS3: b37_1000G_phase1.indels.b37.chr_20p12.1.vcf.gz
+GENOME: resources_broad_hg38_v0_Homo_sapiens_assembly38
+KS1: resources_broad_hg38_v0_Homo_sapiens_assembly38.dbsnp138.vcf.gz
+KS2: resources_broad_hg38_v0_Mills_and_1000G_gold_standard.indels.hg38.vcf.gz
+KS3: resources_broad_hg38_v0_Homo_sapiens_assembly38.known_indels.vcf.gz
 #KS -> KnowSites
 
-TARGET: -L /mnt/data/CREMCOMICSdo001/dsobral/vcall/sample_input/b37.vcrome2.1.ann.chr_20.bed
-TARGET_C: --targets /mnt/data/CREMCOMICSdo001/dsobral/vcall/sample_input/b37.vcrome2.1.ann.chr_20.bed
+TARGET: -L /mnt/data/CREMCOMICSdo001/comics/genome/hg38/S07604514_Covered.bed
+TARGET_C: --targets /mnt/data/CREMCOMICSdo001/comics/genome/hg38/S07604514_Covered.bed
 #TARGET: ""
-COSMIC: --cosmic /mnt/data/CREMCOMICSdo001/dsobral/vcall/genome_b37/CosmicCodingMuts_v87_12_03_2019.chr_20p12.1.vcf.gz
+#TARGET_C: ""
+COSMIC: --cosmic /mnt/data/CREMCOMICSdo001/comics/genome/hg38/CosmicCodingMuts.hg38.vcf.gz
 #COSMIC: ""
 
 #___________________________Threading_______________________:
