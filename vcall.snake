@@ -19,7 +19,6 @@ genome_dir = config["genome_dir"]
 sample_dir = config["sample_dir"] 
 output_dir = config["output_dir"] 
 logs_dir = config["logs_dir"]
-#jar_dir = config["jar_dir"]
 
 GENOME = config["GENOME"]
 KS1 = config["KS1"]
@@ -34,9 +33,9 @@ COSMIC = config["COSMIC"]
 #------------------------------------------------------------------------
 rule bwa_index:
 	input:
-		fa = main_dir + genome_dir + GENOME + ".fasta"# GENOME = b37_human_g1k_v37_decoy.chr20
+		fa = genome_dir + GENOME + ".fasta"# GENOME = b37_human_g1k_v37_decoy.chr20
 	output:
-		main_dir + genome_dir + GENOME + '.fasta.sa'
+		genome_dir + GENOME + '.fasta.sa'
 	message:
 		'Building index -> {output}'
 	shell:
@@ -44,19 +43,19 @@ rule bwa_index:
 
 rule BWA_samblaster_sambamba: #Align reads to reference (using BWA); 
 	input:
-	 	index = main_dir + genome_dir + GENOME + '.fasta.sa',# GENOME = b37_human_g1k_v37_decoy.chr20
-		ref = main_dir + genome_dir + GENOME + '.fasta',
+	 	index = genome_dir + GENOME + '.fasta.sa',# GENOME = b37_human_g1k_v37_decoy.chr20
+		ref = genome_dir + GENOME + '.fasta',
 		r_fow = main_dir + sample_dir + '{sample}.read1.fastq.gz',#R1
 		r_rev = main_dir + sample_dir + '{sample}.read2.fastq.gz' #R2
 	output:
 		align = main_dir + output_dir + '{sample}.alignment.bam'
-		#log = 'mnt/share/repo/example_dataset/BSS.NA12878.20p12.1.30x.log'
+		log = main_dir + output_dir + '{sample}.alignment.log'
 	threads: bwa_samblaster_sambamba_threads
 	shell: 
 		'bwa mem -t {threads} -R "@RG\\tID:{wildcards.sample}\\tPL:ILLUMINA\\tSM:{wildcards.sample}" -M {input.ref} {input.r_fow} {input.r_rev} | '
 		'samblaster -M |'
-		'sambamba view -S -f bam -l 0 /dev/stdin |'#/dev/stdin 
-		'sambamba sort -m 4G --tmpdir={main_dir} -t {threads} -o {output.align} /dev/stdin 2>&1 ' #> {output.log}' #/dev/stdin 
+		'sambamba view -S -f bam -l 0 /dev/stdin |'
+		'sambamba sort -m 4G --tmpdir={main_dir} -t {threads} -o {output.align} /dev/stdin 2>&1 > {output.log}' 
 
 
 #rule gatk3_register:
@@ -71,38 +70,33 @@ rule BWA_samblaster_sambamba: #Align reads to reference (using BWA);
 
 rule picard_dict:
 	input:
-		main_dir + genome_dir + GENOME + '.fasta'
+		genome_dir + GENOME + '.fasta'
 	output:
-		main_dir + genome_dir + GENOME + '.dict'
+		genome_dir + GENOME + '.dict'
 	shell:
 		'picard CreateSequenceDictionary R={input} O={output}'
 
 rule samtools_index:
 	input:
-		main_dir + genome_dir + GENOME + '.fasta'
+		genome_dir + GENOME + '.fasta'
 	output:
-		main_dir + genome_dir + GENOME + '.fasta.fai'
+		genome_dir + GENOME + '.fasta.fai'
 	shell:
 		'samtools faidx {input}'
 
 rule gatk_BaseRecalibrator: #multitheading error
 	input:
-		#jar = jar_dir + 'gatk-3.8/GenomeAnalysisTK.jar',
-		ref = main_dir + genome_dir + GENOME + '.fasta',
-		fai = main_dir + genome_dir + GENOME + '.fasta.fai',
-		dict = main_dir + genome_dir + GENOME + '.dict',
-		ksites1 = main_dir + genome_dir + KS1,
-		ksites2 = main_dir + genome_dir + KS2,#
-		ksites3 = main_dir + genome_dir + KS3,
-		#reads = main_dir + 'single_sample/NA12878.20p12.1.30x.bam'#single_sample
-		reads = main_dir + output_dir + '{sample}.alignment.bam', #single_sample
-		#reads = main_dir + '{sample}.alignment.bam', #single_sample
-		#L = intervalfile
-		#l_target = main_dir + sample_dir + TARGET
+		ref = genome_dir + GENOME + '.fasta',
+		fai = genome_dir + GENOME + '.fasta.fai',
+		dict = genome_dir + GENOME + '.dict',
+		ksites1 = genome_dir + KS1,
+		ksites2 = genome_dir + KS2,
+		ksites3 = genome_dir + KS3,
+		reads = main_dir + output_dir + '{sample}.alignment.bam'
 	threads: gatk_baserecalibrator_threads
 	output:
-		recal_data = main_dir + output_dir + '{sample}.sorted.bam_pre_recal_data.grp',#"$sample"
-		base_recal = main_dir + output_dir + logs_dir +'{sample}.base_recal.qsub'#/logs
+		recal_data = main_dir + output_dir + '{sample}.sorted.bam_pre_recal_data.grp',
+		log = main_dir + output_dir + '{sample}.base_recal.log'
 	shell:
 		'gatk3 -Xmx4g -Djava.io.tmpdir={main_dir} \
 		-T BaseRecalibrator -R {input.ref} -nct {threads} \
@@ -110,7 +104,7 @@ rule gatk_BaseRecalibrator: #multitheading error
 		-knownSites {input.ksites2} \
 		-knownSites {input.ksites3} \
 		-I {input.reads} \
-		-o {output.recal_data} --interval_padding 100 ' + L_TARGET + ' > {output.base_recal}'
+		-o {output.recal_data} --interval_padding 100 ' + L_TARGET + ' > {output.log}'
 
 #rule gatk_BaseRecalibrator2: #multitheading error
 #	input:
@@ -157,15 +151,13 @@ rule gatk_BaseRecalibrator: #multitheading error
 
 rule Apply_recalibration: #multitheading error
 	input:
-		#jar = jar_dir +'gatk-3.8/GenomeAnalysisTK.jar',
-		fa = main_dir + genome_dir + GENOME + ".fasta",
+		fa = genome_dir + GENOME + ".fasta",
 		bqsr = main_dir + output_dir +'{sample}.sorted.bam_pre_recal_data.grp',
-		reads = main_dir + output_dir + '{sample}.alignment.bam'#,
-		#pdf_log = main_dir + output_dir + logs_dir + '{sample}.sorted.bam_plots.pdf'
+		reads = main_dir + output_dir + '{sample}.alignment.bam',
 	threads: gatk_applyrecalibration_threads
 	output:
 		recal = main_dir + output_dir + '{sample}.sorted.nodups.realigned.recal.bam',
-		apply_recal = main_dir + output_dir + logs_dir + '{sample}.apply_recal.qsub'
+		log = main_dir + output_dir + '{sample}.apply_recal.log'
 	shell:
 		'gatk3 -Xmx4g -Djava.io.tmpdir={main_dir} \
 		-T PrintReads \
@@ -173,14 +165,13 @@ rule Apply_recalibration: #multitheading error
 		-I {input.reads} \
 		-BQSR {input.bqsr} \
 		-o {output.recal} \
-		> {output.apply_recal}'
+		> {output.log}'
 
 rule Call_Variants:
 	input:
-		#jar = jar_dir +'gatk-3.8/GenomeAnalysisTK.jar',
-		fa = main_dir + genome_dir + GENOME + ".fasta",
+		fa = genome_dir + GENOME + ".fasta",
 		recal = main_dir + output_dir + '{sample}.sorted.nodups.realigned.recal.bam',
-		ksites1 = main_dir + genome_dir + KS1
+		ksites1 = genome_dir + KS1
 	output:
 		site = main_dir + output_dir + '{sample}.gvcf.gz',
 		logs = main_dir + output_dir + logs_dir + '{sample}.call_vars.qsub'
@@ -194,18 +185,18 @@ rule Call_Variants:
 		--dbsnp {input.ksites1} -variant_index_type LINEAR -variant_index_parameter 128000 \
 		-nct {threads} \
 		-o {output.site} ' + L_TARGET + ' > {output.logs}' 
-		# in case of exões (WES vs WGS) 
+
+
 #VS
 rule Normal_VS_Tumor:
 	input:
-		#jar = jar_dir +'gatk-3.8/GenomeAnalysisTK.jar',
-		ref = main_dir + genome_dir + GENOME + ".fasta",
-		tumor = main_dir + output_dir + '{sample2}.T.sorted.nodups.realigned.recal.bam',#non_dinamic.bam #sample2
-		normal = main_dir + output_dir + '{sample2}.N.sorted.nodups.realigned.recal.bam',#non_dinamic.bam #sample2
+		ref = genome_dir + GENOME + ".fasta",
+		tumor = main_dir + output_dir + '{sample2}.T.sorted.nodups.realigned.recal.bam',
+		normal = main_dir + output_dir + '{sample2}.N.sorted.nodups.realigned.recal.bam',
 		dbSNP = main_dir + genome_dir + KS1
 		#recal = main_dir + output_dir + '{sample}.sorted.nodups.realigned.recal.bam',
 	output:
-		main_dir + output_dir + '{sample2}.Normal_VS_Tumor_output.vcf'#sample2
+		main_dir + output_dir + '{sample2}.Normal_VS_Tumor_output.vcf'
 	threads: normal_vs_tumor_threads
 	shell:
 		'gatk3 -Xmx4g -Djava.io.tmpdir={main_dir} \
