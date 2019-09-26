@@ -172,7 +172,7 @@ rule Call_Variants:
 		ksites1 = genome_dir + KS1
 	output:
 		site = main_dir + output_dir + '{sample}.gvcf.gz',
-		logs = main_dir + output_dir + logs_dir + '{sample}.call_vars.qsub'
+		logs = main_dir + output_dir + '{sample}.call_vars.qsub'
 	threads: call_variants_threads
 	shell:
 		'gatk3 -Xmx4g -Djava.io.tmpdir={main_dir} \
@@ -192,7 +192,6 @@ rule Normal_VS_Tumor:
 		tumor = main_dir + output_dir + '{sample2}.T.sorted.nodups.realigned.recal.bam',
 		normal = main_dir + output_dir + '{sample2}.N.sorted.nodups.realigned.recal.bam',
 		dbSNP = main_dir + genome_dir + KS1
-		#recal = main_dir + output_dir + '{sample}.sorted.nodups.realigned.recal.bam',
 	output:
 		main_dir + output_dir + '{sample2}.Normal_VS_Tumor_output.vcf'
 	threads: normal_vs_tumor_threads
