@@ -13,12 +13,10 @@ normal_vs_tumor_threads = config["Normal_VS_Tumor_threads"]
 
 #|__________Dir_settings:____________|
 
-base_dir = config["base_dir"]
 main_dir = config["main_dir"] 
 genome_dir = config["genome_dir"]
 sample_dir = config["sample_dir"] 
 output_dir = config["output_dir"] 
-logs_dir = config["logs_dir"]
 
 GENOME = config["GENOME"]
 KS1 = config["KS1"]
