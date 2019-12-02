@@ -196,8 +196,8 @@ rule Normal_VS_Tumor:
 		main_dir + output_dir + '{sample2}.Normal_VS_Tumor_output.vcf'
 	threads: normal_vs_tumor_threads
 	shell:
-		'gatk3 -Xmx4g -Djava.io.tmpdir={main_dir} \
-      		-T MuTect2 \
+		'gatk3 -Xmx16g -Djava.io.tmpdir={main_dir} \
+      		-T MuTect2 -rf BadCigar --filter_bases_not_stored \
       		-R {input.ref} \
       		-I:tumor {input.tumor} \
       		-I:normal {input.normal} \
