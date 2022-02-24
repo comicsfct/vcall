@@ -51,24 +51,4 @@ If all goes well the output will be in /mnt/data/output/<sample>.Normal_VS_Tumor
   
 Logs should be generated in /mnt/data/logs
 
- 
-  
-> For Annotation:
-```
-/{your_read}.exome_seq_final.vcf.gz
-```
-6. Then collect your output-file:
-```
-Output dir example:
-/mnt/share/repo/example_dataset/output/T.vcf
-```
-
-Caution: you cannot use the same container several times simultaneously. 
-If you're going to run several times the same image, you need to run each in their own separate container:
-```
-udocker run -v </your_directory/>:/mnt/share jpmatos/vcall:0.2.2 snakemake --snakefile /mnt/share/vcall-pipe.snake -p /mnt/share/repo/example_dataset/output/<analisis_to_make> --cores <n_of_avaliable_cores>
-```
-
-
-:warning: still in development :construction:
 
