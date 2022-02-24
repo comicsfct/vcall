@@ -23,16 +23,24 @@ For this, you need to download GATK 3.8 and place the GenomeAnalysisTK.jar in a 
 udocker run -v /localfolder/:/dockerfolder/: vcall gatk3-register /dockerfolder/GenomeAnalysisTK.jar
 ```
 
+. Clone the current git
+```
+git clone https://github.com/comicsfct/vcall.git
+```
+
 . Adjust the configuration file config.yaml by changing the appropriate variables:
+
+
 
 :warning: still in development :construction:
 
+. In Command Prompt type:
+```
+udocker run -v </your_directory/>:/mnt/data vcall snakemake --snakefile /mnt/data/vcall-pipe.snake -p /mnt/data/outputmple_dataset/output/<analisis_to_make> --cores <n_of_avaliable_cores>
+```
 
 
-5. In Command Prompt type:
-```
-udocker run -v </your_directory/>:/mnt/share vcall snakemake --snakefile /mnt/share/vcall-pipe.snake -p /mnt/share/repo/example_dataset/output/<analisis_to_make> --cores <n_of_avaliable_cores>
-```
+
 
 | Analysis_to_make:
 
