@@ -39,7 +39,7 @@ udocker run -v /localfolder/:/mnt/data vcall snakemake --snakefile /mnt/data/vca
 
 | Somatic Variant Calling using Mutect
 
-You need to have files named <sample>.T.read1.fastq.gz (for tumor) and <sample>.N.read1.fastq.gz (for paired normal)
+You need to have files named sample.T.read1.fastq.gz (for tumor) and sample.N.read1.fastq.gz (for paired normal)
 
 ```
 udocker run -v /localfolder/:/mnt/data vcall snakemake --snakefile /mnt/data/vcall.snake --directory /mnt/data/ -p /mnt/data/output/<sample>.Normal_VS_Tumor_output.vcf --cores <n_of_avaliable_cores>
