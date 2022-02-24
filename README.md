@@ -1,28 +1,18 @@
-:construction: still in development :construction:
-
 # Vcall
 
-A variantcalling pipeline based on GATK 3.8.
+A variant calling pipeline based on GATK 3.8.
 
 ### How to run it
 
-1a. Use [Docker](https://www.docker.com/get-started). This is specially necessary if you want to rebuild the docker image, which basically contains a conda environment with all the necessary packages installed.
+. Use [Docker](https://www.docker.com/get-started), [udocker](https://github.com/indigo-dc/udocker) or other alternatives.
 
-1b. Use [udocker](https://github.com/indigo-dc/udocker). This is what we're using in our servers, so this is what will be mentioned in the examples.
-
-1c. Use [conda](https://docs.conda.io/en/latest/) directly. Create and activate a conda environment with the configuration file in vcall_conda.yml.
-
-2a/b. Pull the docker image.
+. Pull the docker image (example using udocker).
 ```
-udocker pull jpmatos/vcall:0.2.2
-udocker create --name=vcall jpmatos/vcall:0.2.2
+udocker pull comics/vcall:0.2.2
+udocker create --name=vcall comicspt/vcall:0.2.2
 ```
 
-2c. Create the conda environment.
-```
-conda env create -f vcall_conda.yml
-conda activate vcall
-```
+:warning: still in development :construction:
 
 3. Adjust the configuration file config.yaml by changing the appropriate variables:
 
