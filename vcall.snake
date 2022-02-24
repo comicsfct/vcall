@@ -1,7 +1,9 @@
 #----------------Settings:----------------------------------------------
-#The config file must be in the same place as were we're running
+
+# The config file must be in the same place as were we're running
 #configfile:"/home/dsobral/vcall/config_conda.yaml"
-configfile:"vcall_config.yaml"
+# Or when running snakemake specify --directory so this file can be found
+configfile:"config_hg38.yaml"
 
 #|_________Threading_sets:___________|
 
@@ -13,15 +15,23 @@ normal_vs_tumor_threads = config["Normal_VS_Tumor_threads"]
 
 #|__________Dir_settings:____________|
 
-main_dir = config["main_dir"] 
-genome_dir = config["genome_dir"]
 sample_dir = config["sample_dir"] 
 output_dir = config["output_dir"] 
+logs_dir = config["logs_dir"]
+tmp_dir = config["tmp_dir"]
 
-GENOME = config["GENOME"]
-KS1 = config["KS1"]
-KS2 = config["KS2"]
-KS3 = config["KS3"]
+#Annotation
+annovar_dir = config["annovar_dir"]
+
+
+GENOME_BASE = config["GENOME_BASE"]
+dbsnp = config["dbsnp"]
+millsindels = config["millsindels"]
+knownindels = config["knownindels"]
+hapmap = config["hapmap"]
+omni = config["omni"]
+
+SAMPLIST = config["SAMPLIST"] #
 
 L_TARGET = config["TARGET"] #
 C_TARGET = config["TARGET_C"] # improvised solution 
@@ -31,9 +41,9 @@ COSMIC = config["COSMIC"]
 #------------------------------------------------------------------------
 rule bwa_index:
 	input:
-		fa = genome_dir + GENOME + ".fasta"# GENOME = b37_human_g1k_v37_decoy.chr20
+		fa = GENOME_BASE + ".fasta" # GENOME = b37_human_g1k_v37_decoy.chr20
 	output:
-		genome_dir + GENOME + '.fasta.sa'
+		GENOME_BASE + '.fasta.sa'
 	message:
 		'Building index -> {output}'
 	shell:
@@ -41,162 +51,138 @@ rule bwa_index:
 
 rule BWA_samblaster_sambamba: #Align reads to reference (using BWA); 
 	input:
-	 	index = genome_dir + GENOME + '.fasta.sa',# GENOME = b37_human_g1k_v37_decoy.chr20
-		ref = genome_dir + GENOME + '.fasta',
-		r_fow = main_dir + sample_dir + '{sample}.read1.fastq.gz',#R1
-		r_rev = main_dir + sample_dir + '{sample}.read2.fastq.gz' #R2
+	 	index = GENOME_BASE + '.fasta.sa', # GENOME = b37_human_g1k_v37_decoy.chr20
+		ref = GENOME_BASE + '.fasta',
+		r_fow = sample_dir + '{sample}.read1.fastq.gz',#R1
+		r_rev = sample_dir + '{sample}.read2.fastq.gz' #R2
 	output:
-		align = main_dir + output_dir + '{sample}.alignment.bam',
-		log = main_dir + output_dir + '{sample}.alignment.log'
+		align = output_dir + '{sample}.alignment.bam'
+		#log = 'mnt/share/repo/example_dataset/BSS.NA12878.20p12.1.30x.log'
 	threads: bwa_samblaster_sambamba_threads
 	shell: 
 		'bwa mem -t {threads} -R "@RG\\tID:{wildcards.sample}\\tPL:ILLUMINA\\tSM:{wildcards.sample}" -M {input.ref} {input.r_fow} {input.r_rev} | '
 		'samblaster -M |'
-		'sambamba view -S -f bam -l 0 /dev/stdin |'
-		'sambamba sort -m 4G --tmpdir={main_dir} -t {threads} -o {output.align} /dev/stdin 2>&1 > {output.log}' 
+		'sambamba view -S -f bam -l 0 /dev/stdin |'#/dev/stdin 
+		'sambamba sort -m 4G --tmpdir={tmp_dir} -t {threads} -o {output.align} /dev/stdin 2>&1 ' #> {output.log}' #/dev/stdin 
 
-
-#rule gatk3_register:
-#	input:
-#		base_dir + 'GenomeAnalysisTK-3.8-1-0-gf15c1c3ef/GenomeAnalysisTK.jar'
-#		#base_dir = '/home/jmatos/docker_pipe/'
-#	output:
-#		jar_dir +'gatk-3.8/GenomeAnalysisTK.jar'
-#		#jar_dir = '/opt/conda/opt/'
-#	shell:
-#		'gatk3-register {input}'
 
 rule picard_dict:
 	input:
-		genome_dir + GENOME + '.fasta'
+		GENOME_BASE + '.fasta'
 	output:
-		genome_dir + GENOME + '.dict'
+		GENOME_BASE + '.dict'
 	shell:
 		'picard CreateSequenceDictionary R={input} O={output}'
 
 rule samtools_index:
 	input:
-		genome_dir + GENOME + '.fasta'
+		GENOME_BASE + '.fasta'
 	output:
-		genome_dir + GENOME + '.fasta.fai'
+		GENOME_BASE + '.fasta.fai'
 	shell:
 		'samtools faidx {input}'
 
-rule gatk_BaseRecalibrator: #multitheading error
+rule gatk_BaseRecalibrator: 
 	input:
-		ref = genome_dir + GENOME + '.fasta',
-		fai = genome_dir + GENOME + '.fasta.fai',
-		dict = genome_dir + GENOME + '.dict',
-		ksites1 = genome_dir + KS1,
-		ksites2 = genome_dir + KS2,
-		ksites3 = genome_dir + KS3,
-		reads = main_dir + output_dir + '{sample}.alignment.bam'
+		#jar = jar_dir + 'gatk-3.8/GenomeAnalysisTK.jar',
+		ref = GENOME_BASE + '.fasta',
+		fai = GENOME_BASE + '.fasta.fai',
+		dict = GENOME_BASE + '.dict',
+		dbsnp = dbsnp,
+		millsindels = millsindels,#
+		knownindels = knownindels,
+		reads = output_dir + '{sample}.alignment.bam', #single_sample
+		#L = intervalfile
+		#l_target = sample_dir + TARGET
 	threads: gatk_baserecalibrator_threads
 	output:
-		recal_data = main_dir + output_dir + '{sample}.sorted.bam_pre_recal_data.grp',
-		log = main_dir + output_dir + '{sample}.base_recal.log'
+		recal_data = output_dir + '{sample}.sorted.bam_pre_recal_data.grp', #"$sample"
+		base_recal = logs_dir +'{sample}.base_recal.qsub'#/logs
 	shell:
-		'gatk3 -Xmx4g -Djava.io.tmpdir={main_dir} \
+		'gatk3 -Xmx4g -Djava.io.tmpdir={tmp_dir} \
 		-T BaseRecalibrator -R {input.ref} -nct {threads} \
-		-knownSites {input.ksites1} \
-		-knownSites {input.ksites2} \
-		-knownSites {input.ksites3} \
+		-knownSites {input.dbsnp} \
+		-knownSites {input.millsindels} \
+		-knownSites {input.knownindels} \
 		-I {input.reads} \
-		-o {output.recal_data} --interval_padding 100 ' + L_TARGET + ' > {output.log}'
+		-o {output.recal_data} --interval_padding 100 ' + L_TARGET + ' > {output.base_recal}'
 
-#rule gatk_BaseRecalibrator2: #multitheading error
-#	input:
-#		#jar = jar_dir +'gatk-3.8/GenomeAnalysisTK.jar',
-#		ref = main_dir + genome_dir + GENOME + '.fasta',
-#		fai = main_dir + genome_dir + GENOME + '.fasta.fai',
-#		dict = main_dir + genome_dir + GENOME + '.dict',
-#		ksites1 = main_dir + genome_dir + KS1,
-#		ksites2 = main_dir + genome_dir + KS2,#
-#		ksites3 = main_dir + genome_dir + KS3,
-#		bqsr = main_dir + output_dir +'{sample}.sorted.bam_pre_recal_data.grp',#"$sample"		
-#		#reads = main_dir + 'single_sample/NA12878.20p12.1.30x.bam'#single_sample
-#		reads = main_dir + '{sample}.alignment.bam',#single_sample
-#		#l_target = main_dir + sample_dir + TARGET
-#	output:
-#		pos_recal_data = main_dir + output_dir +'{sample}.sorted.bam_pos_recal_data.grp',#"$sample"
-#		base_recal = main_dir + output_dir + logs_dir +'{sample}.base_recal_2.qsub'#/logs
-#	shell:
-#		'gatk3 -Xmx4g \
-#		-T BaseRecalibrator -R {input.ref} -nct 2 \
-#		-knownSites {input.ksites1} \
-#		-knownSites {input.ksites2} \
-#		-knownSites {input.ksites3} \
-#		-BQSR {input.bqsr} \
-#		-I {input.reads} \
-#		-o {output.pos_recal_data} --interval_padding 100 ' + L_TARGET + ' > {output.base_recal}'
- 
 
-#rule Analyze_Covariates:
-#	input:
-#		#jar = jar_dir +'gatk-3.8/GenomeAnalysisTK.jar',
-#		fa = main_dir + genome_dir + GENOME + ".fasta",
-#		bqsr = main_dir + output_dir +'{sample}.sorted.bam_pre_recal_data.grp',
-#		pos_recal_data = main_dir + output_dir +'{sample}.sorted.bam_pos_recal_data.grp'	
-#	output:
-#		pdf_log = main_dir + output_dir + logs_dir + '{sample}.sorted.bam_plots.pdf'
-#	shell:
-#		'gatk3 -Xmx4g \
-#		-T AnalyzeCovariates \
-#		-R {input.fa} \
-#		-before {input.bqsr} \
-#		-after {input.pos_recal_data}'# \
-#		#-plots {output.pdf_log}'
-
-rule Apply_recalibration: #multitheading error
+rule Apply_recalibration: 
 	input:
-		fa = genome_dir + GENOME + ".fasta",
-		bqsr = main_dir + output_dir +'{sample}.sorted.bam_pre_recal_data.grp',
-		reads = main_dir + output_dir + '{sample}.alignment.bam',
+		#jar = jar_dir +'gatk-3.8/GenomeAnalysisTK.jar',
+		fa = GENOME_BASE + ".fasta",
+		bqsr = output_dir +'{sample}.sorted.bam_pre_recal_data.grp',
+		reads = output_dir + '{sample}.alignment.bam'#,
+		#pdf_log = logs_dir + '{sample}.sorted.bam_plots.pdf'
 	threads: gatk_applyrecalibration_threads
 	output:
-		recal = main_dir + output_dir + '{sample}.sorted.nodups.realigned.recal.bam',
-		log = main_dir + output_dir + '{sample}.apply_recal.log'
+		recal = output_dir + '{sample}.sorted.nodups.realigned.recal.bam',
+		apply_recal = logs_dir + '{sample}.apply_recal.qsub'
 	shell:
-		'gatk3 -Xmx4g -Djava.io.tmpdir={main_dir} \
+		'gatk3 -Xmx4g -Djava.io.tmpdir={tmp_dir} \
 		-T PrintReads \
 		-R {input.fa} --filter_bases_not_stored -nct {threads} \
 		-I {input.reads} \
 		-BQSR {input.bqsr} \
 		-o {output.recal} \
-		> {output.log}'
+		> {output.apply_recal}'
 
 rule Call_Variants:
 	input:
-		fa = genome_dir + GENOME + ".fasta",
-		recal = main_dir + output_dir + '{sample}.sorted.nodups.realigned.recal.bam',
-		ksites1 = genome_dir + KS1
+		#jar = jar_dir +'gatk-3.8/GenomeAnalysisTK.jar',
+		fa = GENOME_BASE + ".fasta",
+		recal = output_dir + '{sample}.sorted.nodups.realigned.recal.bam',
+		dbsnp = dbsnp
 	output:
-		site = main_dir + output_dir + '{sample}.gvcf.gz',
-		logs = main_dir + output_dir + '{sample}.call_vars.log'
+		site = output_dir + '{sample}.gvcf.gz',
+		logs = logs_dir + '{sample}.call_vars.qsub'
 	threads: call_variants_threads
 	shell:
-		'gatk3 -Xmx4g -Djava.io.tmpdir={main_dir} \
+		'gatk3 -Xmx4g -Djava.io.tmpdir={tmp_dir} \
 		-T HaplotypeCaller -rf BadCigar -R {input.fa} \
 		-ip 100 \
 		-I {input.recal} \
 		-stand_call_conf 10  --filter_bases_not_stored --emitRefConfidence GVCF \
-		--dbsnp {input.ksites1} -variant_index_type LINEAR -variant_index_parameter 128000 \
+		--dbsnp {input.dbsnp} -variant_index_type LINEAR -variant_index_parameter 128000 \
 		-nct {threads} \
 		-o {output.site} ' + L_TARGET + ' > {output.logs}' 
+		# in case of exons (WES vs WGS) 
+
+
+rule Genotype_Variants:
+	input:
+		fa = GENOME_BASE + ".fasta",
+		dbsnp = dbsnp,
+		samplist = SAMPLIST
+	output:
+		site = output_dir + 'genotype_vars.vcf.gz',
+		logs = logs_dir + 'genotype_vars.qsub'
+	threads: call_variants_threads
+	shell:
+		'gatk3 -Xmx4g -Djava.io.tmpdir={tmp_dir} \
+		-T GenotypeGVCFs -R {input.fa} \
+		-ip 100 --max_alternate_alleles 5 \
+		-V {input.samplist} \
+		--dbsnp {input.dbsnp} \
+		-nt {threads} \
+		-o {output.site} ' + L_TARGET + ' > {output.logs}' 
+		# in case of exons (WES vs WGS) 
 
 
 #VS
 rule Normal_VS_Tumor:
 	input:
-		ref = genome_dir + GENOME + ".fasta",
-		tumor = main_dir + output_dir + '{sample2}.T.sorted.nodups.realigned.recal.bam',
-		normal = main_dir + output_dir + '{sample2}.N.sorted.nodups.realigned.recal.bam',
-		dbSNP = main_dir + genome_dir + KS1
+		ref = GENOME_BASE + ".fasta",
+		tumor = output_dir + '{sample2}.T.sorted.nodups.realigned.recal.bam',#non_dinamic.bam #sample2
+		normal = output_dir + '{sample2}.N.sorted.nodups.realigned.recal.bam',#non_dinamic.bam #sample2
+		dbSNP = dbsnp
+		#recal = output_dir + '{sample}.sorted.nodups.realigned.recal.bam',
 	output:
-		main_dir + output_dir + '{sample2}.Normal_VS_Tumor_output.vcf'
+		output_dir + '{sample2}.Normal_VS_Tumor_output.vcf' #sample2
 	threads: normal_vs_tumor_threads
 	shell:
-		'gatk3 -Xmx16g -Djava.io.tmpdir={main_dir} \
+		'gatk3 -Xmx16g -Djava.io.tmpdir={tmp_dir} \
       		-T MuTect2 -rf BadCigar --filter_bases_not_stored \
       		-R {input.ref} \
       		-I:tumor {input.tumor} \
@@ -204,34 +190,101 @@ rule Normal_VS_Tumor:
     		-nct {threads} \
       		--dbsnp {input.dbSNP} ' + COSMIC + ' ' + L_TARGET + ' -o {output}'
 
-#|>CopyNumber_CNVkit:_(cnvkit.py , DNAcopy(an_R_package))_____________________________________________________________________________________________
-#rule CopyNumber_CNVkit: 
-#	input:
-#		tumor = main_dir + output_dir + '{sample3}.T.sorted.nodups.realigned.recal.bam',#{Sample}_Tumor.bam
-#		normal = main_dir + output_dir + '{sample3}.N.sorted.nodups.realigned.recal.bam',#{Sample}_Normal.bam
-#		fa = main_dir + genome_dir + GENOME + ".fasta"
-#	output:
-#		referc = main_dir + output_dir + '{sample3}.my_reference.cnn'
-#	shell:
-#		'cnvkit.py batch {input.tumor} --normal {input.normal} ' + C_TARGET + ' \
-#   	--fasta {input.fa} \
-#  	--output-reference {output.referc} --output-dir example/'
-#    	#--targets ' + C_TARGET + ' \
+rule Recalibrate_Variants:
+	input:
+		fa = GENOME_BASE + ".fasta",
+		hapmap = hapmap,
+		omni = omni,
+		knownindels = knownindels,
+		dbsnp = dbsnp,
+		millsindels = millsindels,
+		sample = output_dir + 'genotype_vars.vcf.gz'
+	output:
+		site = output_dir + 'genotype_vars.recalibrated.vcf.gz',
+		logs = logs_dir + 'genotype_vars.recalibrated.logs'
+	shell:
+		'gatk3 -Xmx16g -Djava.io.tmpdir={tmp_dir} \
+		-T VariantRecalibrator -R {input.fa} \
+		-input {input.sample} \
+		-resource:hapmap,known=false,training=true,truth=true,prior=15.0 \
+		{hapmap} \
+		-resource:omni,known=false,training=true,truth=true,prior=12.0 \
+		{omni} \
+		-resource:1000G,known=false,training=true,truth=false,prior=10.0 \
+		{knownindels} \
+		-resource:dbsnp,known=true,training=false,truth=false,prior=2.0 \
+		{dbsnp} \
+		-titv 2.8 -an DP -an QD -an FS -an MQRankSum -an SOR -an ReadPosRankSum \
+		-mode SNP -tranche 100.0 -tranche 99.9 -tranche 99.0 -tranche 90.0 --maxGaussians 4 \
+		-recalFile {tmp_dir}tmp.recalibrated_SNP.recal \
+		-tranchesFile {tmp_dir}tmp.recalibrated_SNP.tranches \
+		-rscriptFile {tmp_dir}tmp.recalibrated_SNP_plots.R \
+		 >> {output.logs}; \
+		gatk3 -Xmx16g -Djava.io.tmpdir={tmp_dir} \
+		-T ApplyRecalibration -R {input.fa} \
+		-input {input.sample} \
+		-recalFile {tmp_dir}tmp.recalibrated_SNP.recal \
+		-tranchesFile {tmp_dir}tmp.recalibrated_SNP.tranches \
+		-o {tmp_dir}tmp.recalibrated_SNP.vcf.gz \
+		 >> {output.logs}; \
+		gatk3 -Xmx16g -Djava.io.tmpdir={tmp_dir} \
+		-T VariantRecalibrator -R {input.fa} \
+		-input {tmp_dir}tmp.recalibrated_SNP.vcf.gz \
+		-resource:mills,known=true,training=true,truth=true,prior=12.0 \
+		{millsindels} \
+		-an QD -an DP -an FS -an SOR -an MQRankSum -an ReadPosRankSum \
+		-mode INDEL -tranche 100.0 -tranche 99.9 -tranche 99.0 -tranche 90.0 --maxGaussians 4 \
+		-recalFile {tmp_dir}tmp.recalibrated_indel.recal \
+		-tranchesFile {tmp_dir}tmp.recalibrated_indel.tranches \
+		-rscriptFile {tmp_dir}tmp.recalibrated_indel_plots.R \
+		 >> {output.logs}; \
+		gatk3 -Xmx16g -Djava.io.tmpdir={tmp_dir} \
+		-T ApplyRecalibration -R {input.fa} \
+		-input {tmp_dir}tmp.recalibrated_SNP.vcf.gz \
+		-mode INDEL --ts_filter_level 99.9 \
+		-recalFile {tmp_dir}tmp.recalibrated_indel.recal \
+		-tranchesFile {tmp_dir}tmp.recalibrated_indel.tranches \
+		-o {tmp_dir}tmp.recalibrated_SNP_indel.vcf.gz \
+		 >> {output.logs}; \
+		gatk3 -Xmx16g -Djava.io.tmpdir={tmp_dir} \
+		-T CalculateGenotypePosteriors -R {input.fa} \
+		--supporting {dbsnp} \
+		-V {tmp_dir}tmp.recalibrated_SNP_indel.vcf.gz \
+		-o {output.site} \
+		 >> {output.logs}; \
+		rm {tmp_dir}tmp.recalibrated_SNP.recal \
+		{tmp_dir}tmp.recalibrated_indel.recal \
+		{tmp_dir}tmp.recalibrated_SNP.tranches \
+		{tmp_dir}tmp.recalibrated_indel.tranches \
+		{tmp_dir}tmp.recalibrated_SNP_plots.R \
+		{tmp_dir}tmp.recalibrated_indel_plots.R \
+		{tmp_dir}tmp.recalibrated_SNP.vcf.gz \
+		{tmp_dir}tmp.recalibrated_SNP_indel.vcf.gz ' 
 
 
-#|>Annotation:_(vt, snpEff/SnpSift, bcftools/htslib)_____________________________________________________________________________________________
-#rule Annotation:
-#	input:
-#		jar_snpeff = jar_snpEff +'snpeff-4.3.1t-2/snpEff.jar',
-#		pl_vcfEffOnePerLine = jar_snpEff + 'snpeff-4.3.1t-2/scripts/vcfEffOnePerLine.pl',
-#		jar_snpsift = jar_SnpSift + 'snpsift-4.3.1t-1/SnpSift.jar',
-#		exome = main_dir + output_dir + '{sample4}.Normal_VS_Tumor_output.vcf', #exome_seq_20181113_recalibrated_variants_postCGP_Gfiltered.vcf.gz
-#		fa = main_dir + genome_dir + GENOME + ".fasta"
-#	output:
-#		main_dir + output_dir + '{sample4}.exome_seq_final.vcf.gz'
-#	shell:
-#		'vt decompose -s {input.exome} | vt normalize -q -r {input.fa} - | \
-#		java -Xmx16g -jar {input.jar_snpeff} eff -noMotif -noNextProt -q -canon -hgvs -lof GRCh37.75 - | \
-#		{input.pl_vcfEffOnePerLine} | \
-#		bgzip > {output}'
+rule Annotation_Conv:
+	input:
+		output_dir + '{sampleanconv}.{extan}'
+	wildcard_constraints:
+		extan="vcf|vcf.gz"
+	output:
+		output_dir + '{sampleanconv}.{extan}.annot'
+	shell:
+		'{annovar_dir}convert2annovar.pl -format vcf4 -allsample -includeinfo -withfreq {input} > {output}'
+
+
+# May need to apply normalization before: https://annovar.openbioinformatics.org/en/latest/articles/VCF/
+# bcftools norm -m-both -o ex1.step1.vcf ex1.vcf.gz
+# bcftools norm -f human_g1k_v37.fasta -o ex1.step2.vcf ex1.step1.vcf
+rule Annotation:
+	input:
+		output_dir + '{sampleanno}'
+	output:
+		output_dir + '{sampleanno}.hg38_multianno.txt'
+	shell:
+		'{annovar_dir}table_annovar.pl {input} {annovar_dir}humandb/ --buildver hg38 --remove \
+		--protocol refGene,ensGene,avsnp150,clinvar_20190305,cosmic89_coding,ALL.sites.2015_08,exac03 \
+		--operation g,g,f,f,f,f,f --nastring . --polish --otherinfo --outfile {input}; echo {output}'
+			
+
 

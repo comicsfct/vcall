@@ -1,26 +1,31 @@
 #----------------Dir_settings:----------------------------------------------
-main_dir: /mnt/data/CREMCOMICSdo001/dsobral/vcall/
-genome_dir: /mnt/data/CREMCOMICSdo001/comics/genome/hg38/
-sample_dir: sample_input/ #sample director, where samples are (relative to main_dir)
-output_dir: output/ #output folder (relative to main_dir)
+sample_dir: /mnt/data/samples/ #sample directory
+output_dir: /mnt/data/output/ #output folder
+logs_dir: /mnt/data/logs/ # for logs...
+tmp_dir: /mnt/data/tmp/
+annovar_dir: /mnt/software/annovar/annovar/
 
 #---------------Settings:----------------------------------------------
-GENOME: resources_broad_hg38_v0_Homo_sapiens_assembly38
-KS1: resources_broad_hg38_v0_Homo_sapiens_assembly38.dbsnp138.vcf.gz
-KS2: resources_broad_hg38_v0_Mills_and_1000G_gold_standard.indels.hg38.vcf.gz
-KS3: resources_broad_hg38_v0_Homo_sapiens_assembly38.known_indels.vcf.gz
-#KS -> KnowSites
+GENOME_BASE: /mnt/data/genome/hg38/resources_broad_hg38_v0_Homo_sapiens_assembly38
+dbsnp: /mnt/data/genome/hg38/resources_broad_hg38_v0_Homo_sapiens_assembly38.dbsnp138.vcf.gz
+omni: /mnt/data/genome/hg38/resources_broad_hg38_v0_1000G_omni2.5.hg38.vcf.gz
+hapmap: /mnt/data/genome/hg38/resources_broad_hg38_v0_hapmap_3.3.hg38.vcf.gz
+millsindels: /mnt/data/hg38/resources_broad_hg38_v0_Mills_and_1000G_gold_standard.indels.hg38.vcf.gz
+knownindels: /mnt/data/hg38/resources_broad_hg38_v0_Homo_sapiens_assembly38.known_indels.vcf.gz
 
-TARGET: -L /mnt/data/CREMCOMICSdo001/comics/genome/hg38/S07604514_Covered.bed
-TARGET_C: --targets /mnt/data/CREMCOMICSdo001/comics/genome/hg38/S07604514_Covered.bed
+
+TARGET: "-L /mnt/data/genome/hg38/xgen-exome-research-panel-targetsae255a1532796e2eaa53ff00001c1b3c_ensemble97_lift_GRCh38.chr.bed"
+TARGET_C: "--targets /mnt/data/genome/hg38/xgen-exome-research-panel-targetsae255a1532796e2eaa53ff00001c1b3c_ensemble97_lift_GRCh38.chr.bed"
 #TARGET: ""
-#TARGET_C: ""
-COSMIC: --cosmic /mnt/data/CREMCOMICSdo001/comics/genome/hg38/CosmicCodingMuts.hg38.vcf.gz
+COSMIC: "--cosmic /mnt/data/genome/hg38/CosmicCodingMuts.hg38.vcf.gz"
 #COSMIC: ""
 
+SAMPLIST: /mnt/data/samples/genotype.list
+
+
 #___________________________Threading_______________________:
-BWA_samblaster_sambamba_threads: 4 
+BWA_samblaster_sambamba_threads: 4
 GATK_baserecalibrator_threads: 4
 GATK_applyrecalibration_threads: 4
 Call_Variants_threads: 4
-Normal_VS_Tumor_threads: 4
+Normal_VS_Tumor_threads: 1
