@@ -32,8 +32,6 @@ git clone https://github.com/comicsfct/vcall.git
 
 
 
-:warning: still in development :construction:
-
 . The general process to run the pipeline is by running:
 ```
 udocker run -v /localfolder/:/mnt/data vcall snakemake --snakefile /mnt/data/vcall.snake --directory /mnt/data/ -p /mnt/data/output/<analisis_to_make> --cores <n_of_avaliable_cores>
