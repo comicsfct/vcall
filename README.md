@@ -8,7 +8,7 @@ A variant calling pipeline based on GATK 3.8.
 
 . Pull the docker image (example using udocker).
 ```
-udocker pull comics/vcall:0.2.2
+udocker pull comicspt/vcall:0.2.2
 udocker create --name=vcall comicspt/vcall:0.2.2
 ```
 
