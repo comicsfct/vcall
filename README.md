@@ -34,24 +34,25 @@ git clone https://github.com/comicsfct/vcall.git
 
 :warning: still in development :construction:
 
-. In Command Prompt type:
+. The general process to run the pipeline is by running:
 ```
-udocker run -v </your_directory/>:/mnt/data vcall snakemake --snakefile /mnt/data/vcall-pipe.snake -p /mnt/data/outputmple_dataset/output/<analisis_to_make> --cores <n_of_avaliable_cores>
+udocker run -v /localfolder/:/mnt/data vcall snakemake --snakefile /mnt/data/vcall.snake --directory /mnt/data/ -p /mnt/data/output/<analisis_to_make> --cores <n_of_avaliable_cores>
 ```
 
+| Somatic Variant Calling using Mutect
 
+You need to have files named <sample>.T.read1.fastq.gz (for tumor) and <sample>.N.read1.fastq.gz (for paired normal)
 
+```
+udocker run -v /localfolder/:/mnt/data vcall snakemake --snakefile /mnt/data/vcall.snake --directory /mnt/data/ -p /mnt/data/output/<sample>.Normal_VS_Tumor_output.vcf --cores <n_of_avaliable_cores>
+```
 
-| Analysis_to_make:
+If all goes well the output will be in /mnt/data/output/<sample>.Normal_VS_Tumor_output.vcf 
+  
+Logs should be generated in /mnt/data/logs
 
-> For comparation between Tumor and Normal reads:
-```
-/{your_read}.Normal_VS_Tumor_output.vcf 
-```
-> For Analisis of Copy-number variantes:
-```
-/{your_read}.my_reference.cnn
-```
+ 
+  
 > For Annotation:
 ```
 /{your_read}.exome_seq_final.vcf.gz
