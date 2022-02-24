@@ -12,9 +12,22 @@ udocker pull comicspt/vcall:0.2.2
 udocker create --name=vcall comicspt/vcall:0.2.2
 ```
 
+Due to licensing restrictions on GATK 3.8, the docker image does not contain GATK itself. 
+
+Therefore, the first time you use the image you need to install GATK. 
+
+For this, you need to download GATK 3.8 and place the GenomeAnalysisTK.jar in a local folder.
+
+. Install the GATK in the docker image, assuming GenomeAnalysisTK.jar is in /localfolder/ (adapt to your case)
+```
+udocker run -v /localfolder/:/dockerfolder/: vcall gatk3-register /dockerfolder/GenomeAnalysisTK.jar
+```
+
+. Adjust the configuration file config.yaml by changing the appropriate variables:
+
 :warning: still in development :construction:
 
-3. Adjust the configuration file config.yaml by changing the appropriate variables:
+
 
 5. In Command Prompt type:
 ```
